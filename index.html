@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presensi Harian</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: auto; background: #f2f2f2; }
+    input, button { width: 100%; padding: 12px; margin-top: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; }
+    button { background-color: #28a745; color: white; }
+    #status { margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<h2>Presensi Harian</h2>
+<input type="text" id="nama" placeholder="Nama">
+<input type="password" id="password" placeholder="Password">
+<button onclick="ambilLokasi()">Ambil Lokasi</button>
+<p id="lokasi"></p>
+<button onclick="kirimPresensi()">Kirim Presensi</button>
+<p id="status"></p>
+
+<script>
+let lat, lng;
+let idPerangkat = localStorage.getItem("idPerangkat") || "id-" + Math.random().toString(36).substr(2, 9);
+localStorage.setItem("idPerangkat", idPerangkat);
+
+function ambilLokasi() {
+  navigator.geolocation.getCurrentPosition(pos => {
+    lat = pos.coords.latitude;
+    lng = pos.coords.longitude;
+    document.getElementById("lokasi").innerText = `Lokasi: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  }, err => {
+    alert("Gagal mendapatkan lokasi: " + err.message);
+  });
+}
+
+function kirimPresensi() {
+  if (!lat || !lng) return alert("Ambil lokasi terlebih dahulu.");
+  const nama = document.getElementById("nama").value;
+  const password = document.getElementById("password").value;
+  if (!nama || !password) return alert("Isi nama dan password");
+
+  const data = new URLSearchParams({
+    nama, password,
+    latitude: lat,
+    longitude: lng,
+    idPerangkat
+  });
+
+  fetch("https://script.google.com/macros/s/AKfycbycFVflTGBCR9XV8U8gju-umgYi0HAFNv5tDCSJAYryCd0aFEdzf8x0OAHCFVxw28CGaA/exec", {
+    method: "POST",
+    body: data
+  })
+  .then(r => r.text())
+  .then(t => {
+    document.getElementById("status").innerText = t;
+  })
+  .catch(e => alert("Gagal kirim presensi."));
+}
+</script>
+
+</body>
+</html>
